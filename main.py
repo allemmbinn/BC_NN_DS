@@ -173,6 +173,43 @@ layer1.forward(X)
 activation1.forward(layer1.output)
 print(activation1.output[:5]) """
 
+# Loss Function
+
+""" nnfs.init()
+
+X, y = spiral_data(100,3)
+
+class Dense_Layer:
+    def __init__(self, n_inputs, n_neurons):
+        self.weights = 0.10 * np.random.randn(n_inputs, n_neurons)
+        self.biases = np.zeros((1,n_neurons))
+
+    def forward(self, inputs):
+        self.output = np.dot(inputs, self.weights) + self.biases
+
+class ReLU:
+    def forward(self, inputs):
+        self.output = np.maximum(0, inputs)
+
+layer1 = Dense_Layer(2,5) # The first 2 is for the coordinates X and Y
+activation1 = ReLU()
+
+layer1.forward(X)
+# print(layer1.output[:5])
+activation1.forward(layer1.output)
+print(activation1.output[:5]) """
+
+
+# Softmax Activation Function
+
+""" layer_outputs = [4.8, 1.21, 2.385]
+
+exp_values = np.exp(layer_outputs)
+norm_values = exp_values / np.sum(exp_values)
+
+print(norm_values)
+print(sum(norm_values)) """
+
 
 # Softmax Activation Function
 
@@ -186,7 +223,7 @@ print(sum(norm_values)) """
 
 # Softmax Activation Function - Class
 
-nnfs.init()
+""" nnfs.init()
 
 class Dense_Layer:
     def __init__(self, n_inputs, n_neurons):
@@ -216,4 +253,63 @@ layer1.forward(x)
 activation1.forward(layer1.output)
 dense2.forward(activation1.output)
 activation2.forward(dense2.output)
-print(activation2.output[:5])
+print(activation2.output[:5]) """
+
+# Cross Entropy Loss - Class
+
+nnfs.init()
+
+class Dense_Layer:
+    def __init__(self, n_inputs, n_neurons):
+        self.weights = 0.10 * np.random.randn(n_inputs, n_neurons)
+        self.biases = np.zeros((1,n_neurons))
+
+    def forward(self, inputs):
+        self.output = np.dot(inputs, self.weights) + self.biases
+
+class ReLU:
+    def forward(self, inputs):
+        self.output = np.maximum(0, inputs)
+
+class Softmax:
+    def forward(self, inputs):
+        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+        probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
+        self.output = probabilities
+
+class Loss:
+    def calculate(self,output, y):
+        sample_losses = self.forward(output,y)
+        data_loss = np.mean(sample_losses)
+        return data_loss
+    
+class Loss_CategoricalCrossentropy(Loss):
+    def forward(self, y_pred, y_true):
+        samples = len(y_pred)
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1-1e-7)
+
+        if(len(y_true.shape) == 1):
+            corrected_confidence = y_pred_clipped[range(samples), y_true]
+
+        else:
+            corrected_confidence = np.sum(y_pred_clipped*y_true, axis=1)
+        
+        negative_likelihoods = - np.log(corrected_confidence)
+        return negative_likelihoods
+
+x, y = spiral_data(samples=100, classes=3)
+dense1 = Dense_Layer(2,3) # The first 2 is for the coordinates X and Y
+activation1 = ReLU()
+dense2 = Dense_Layer(3,3)
+activation2 = Softmax()
+loss = Loss_CategoricalCrossentropy()
+
+dense1.forward(x)
+activation1.forward(dense1.output)
+dense2.forward(activation1.output)
+activation2.forward(dense2.output)
+loss_value = loss.calculate(activation2.output, y)
+print("Loss Value: ",loss_value)
+
+accuracy = np.mean(np.argmax(activation2.output, axis=1) == y)
+print("Accuracy: ",accuracy)
